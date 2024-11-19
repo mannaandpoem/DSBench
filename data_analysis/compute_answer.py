@@ -56,18 +56,16 @@ async def process_sample(client, sample, model, eval_model, save_process, save_p
         predicts = []
         with open(os.path.join(save_path, model, f"{sample['id']}.json"), "r") as f:
             for line in f:
+                if not line.strip():  # 跳过空行
+                    continue
                 predicts.append(eval(line.strip()))
 
         for id, question_name in enumerate(sample["questions"]):
             question = read_txt(os.path.join("./data", sample["id"], f"{question_name}.txt"))
             pre = predicts[id]
             try:
-                if not model.endswith("di"):
-                    ans = await evaluate_prediction(client, eval_model, question, str(sample["answers"][id]),
-                                                    pre["response"])
-                else:
-                    ans = await evaluate_prediction(client, eval_model, question, str(sample["answers"][id]),
-                                                    pre["summary"])
+                ans = await evaluate_prediction(client, eval_model, question, str(sample["answers"][id]),
+                                                pre.get("response", []))
             except Exception as e:
                 print(f"Error processing question {id}: {e}")
                 ans = "False"
@@ -82,14 +80,15 @@ async def process_sample(client, sample, model, eval_model, save_process, save_p
 
 async def main():
     parser = argparse.ArgumentParser(description="Evaluate predictions with AsyncOpenAI.")
-    parser.add_argument("--model", type=str, required=True, help="Specify the model to use.")
+    parser.add_argument("--save_name", type=str, required=True, help="Specify the model to use.")
+    parser.add_argument("--eval_model", type=str, default="gpt-4o-mini", help="Specify the model to evaluate.")
     args = parser.parse_args()
 
-    model = args.model
-    eval_model = "gpt-4o-mini"
+    save_name = args.save_name
+    eval_model = args.eval_model
 
     save_path = "./save_process"
-    os.makedirs(os.path.join(save_path, model), exist_ok=True)
+    os.makedirs(os.path.join(save_path, save_name), exist_ok=True)
 
     samples = []
     with open("./data.json", "r") as f:
@@ -101,12 +100,12 @@ async def main():
     samples = [sample for sample in samples if sample["id"] in keep_ids]
 
     results = []
-    save_f = open(os.path.join(save_path, model, "results.json"), "w")
-    save_process = open(os.path.join(save_path, model, "results_process.json"), "w")
+    save_f = open(os.path.join(save_path, save_name, "results.json"), "w")
+    save_process = open(os.path.join(save_path, save_name, "results_process.json"), "w")
 
     # 并行处理所有样本
     tasks = [
-        process_sample(client, sample, model, eval_model, save_process, save_path)
+        process_sample(client, sample, save_name, eval_model, save_process, save_path)
         for sample in samples
     ]
     all_results = await asyncio.gather(*tasks)
