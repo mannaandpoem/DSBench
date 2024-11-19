@@ -112,8 +112,7 @@ def main():
     with open("./data.json", "r") as f:
         samples = [eval(line.strip()) for line in f]
 
-    # keep_ids = ["00000029", "00000004", "00000034", "00000036", "00000001"]
-    keep_ids = ["00000001"]
+    keep_ids = ["00000029", "00000004", "00000034", "00000036", "00000001"]
     samples = [sample for sample in samples if sample["id"] in keep_ids]
 
     print(f"Processing {len(samples)} samples...")

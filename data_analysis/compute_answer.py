@@ -48,13 +48,12 @@ def read_txt(path):
         return f.read()
 
 
-async def process_sample(client, sample, model, eval_model, save_process, save_path):
+async def process_sample(client, sample, save_name, eval_model, save_f, save_process, save_path):
     results = []
-    processes = []
 
     if len(sample["questions"]) > 0:
         predicts = []
-        with open(os.path.join(save_path, model, f"{sample['id']}.json"), "r") as f:
+        with open(os.path.join(save_path, save_name, f"{sample['id']}.json"), "r") as f:
             for line in f:
                 if not line.strip():  # 跳过空行
                     continue
@@ -75,12 +74,16 @@ async def process_sample(client, sample, model, eval_model, save_process, save_p
             save_process.write("\n")
             save_process.flush()
             results.append(ans)
+
+        json.dump(results, save_f)
+        save_f.write("\n")
+        save_f.flush()
     return results
 
 
 async def main():
     parser = argparse.ArgumentParser(description="Evaluate predictions with AsyncOpenAI.")
-    parser.add_argument("--save_name", type=str, required=True, help="Specify the model to use.")
+    parser.add_argument("--save_name", type=str, required=True, help="Specify the save_name to use.")
     parser.add_argument("--eval_model", type=str, default="gpt-4o-mini", help="Specify the model to evaluate.")
     args = parser.parse_args()
 
@@ -93,10 +96,11 @@ async def main():
     samples = []
     with open("./data.json", "r") as f:
         for line in f:
+            if not line.strip():
+                continue
             samples.append(eval(line.strip()))
 
-    # keep_ids = ["00000029", "00000004", "00000034", "00000036", "00000001"]
-    keep_ids = ["00000001"]
+    keep_ids = ["00000029", "00000004", "00000034", "00000036", "00000001"]
     samples = [sample for sample in samples if sample["id"] in keep_ids]
 
     results = []
@@ -105,7 +109,7 @@ async def main():
 
     # 并行处理所有样本
     tasks = [
-        process_sample(client, sample, save_name, eval_model, save_process, save_path)
+        process_sample(client, sample, save_name, eval_model, save_f, save_process, save_path)
         for sample in samples
     ]
     all_results = await asyncio.gather(*tasks)
