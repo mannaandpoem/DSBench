@@ -12,5 +12,6 @@ save_name=$1
 # 切换到当前脚本所在目录
 cd "$(dirname "$0")"
 
+# 执行指定的 Python 脚本并保存结果
 echo "Running eva_autogen_gpt.py..."
 python eva_autogen_gpt.py --save_name "$save_name"
