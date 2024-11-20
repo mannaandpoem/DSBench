@@ -6,7 +6,7 @@ import autogen
 from autogen.coding import LocalCommandLineCodeExecutor
 import json
 import time
-from tqdm.notebook import tqdm
+from tqdm.auto import tqdm
 
 parser = argparse.ArgumentParser(description="Process samples and save outputs.")
 parser.add_argument("--save_name", type=str, default="gpt-4o", help="Directory to save processed outputs.")

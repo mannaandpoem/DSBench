@@ -9,7 +9,7 @@ import json
 import base64
 import time
 import pandas as pd
-from tqdm.notebook import tqdm
+from tqdm.auto import tqdm
 
 
 parser = argparse.ArgumentParser(description="Process samples and save outputs.")
