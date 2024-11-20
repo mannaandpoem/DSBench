@@ -16,13 +16,5 @@ cd "$(dirname "$0")"
 #echo "Running eva_di_gpt_parallel.py..."
 #python eva_di_gpt_parallel.py --save_name "$save_name"
 
-echo "Running eva_di_gpt_serial.py..."
-python eva_di_gpt_serial.py --save_name "$save_name"
-
-echo "Running compute_answer.py..."
-python compute_answer.py --save_name "$save_name"
-
-echo "Running show_result.py..."
-python show_result.py --save_name "$save_name"
-
-echo "All tasks completed successfully!"
+echo "Running eva_autogen_gpt.py..."
+python eva_autogen_gpt.py --save_name "$save_name"
