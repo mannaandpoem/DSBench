@@ -12,6 +12,10 @@ import time
 import pandas as pd
 from tqdm.notebook import tqdm
 
+parser = argparse.ArgumentParser(description="Process samples and save outputs.")
+parser.add_argument("--save_name", type=str, required=True, help="Directory to save processed outputs.")
+args = parser.parse_args()
+model = args.save_name
 
 def gpt_tokenize(string: str, encoding) -> int:
     """Returns the number of tokens in a text string."""
@@ -76,32 +80,6 @@ def truncate_text(text, max_tokens=128000):
     return text
 
 
-MODEL_LIMITS = {
-    "gpt-3.5-turbo-0125": 16_385,
-    "gpt-4-turbo-2024-04-09": 128_000,
-    "gpt-4o-2024-05-13": 128_000,
-    "gpt-4o": 128_000,
-    "gpt-4o-mini": 128_000,
-}
-
-# The cost per token for each model input.
-MODEL_COST_PER_INPUT = {
-    "gpt-3.5-turbo-0125": 0.0000005,
-    "gpt-4-turbo-2024-04-09": 0.00001,
-    "gpt-4o-2024-05-13": 0.000005,
-    "gpt-4o": 0.0000025,  # 2.5
-    "gpt-4o-mini": 0.00000015,  # 0.150
-}
-
-# The cost per token for each model output.
-MODEL_COST_PER_OUTPUT = {
-    "gpt-3.5-turbo-0125": 0.0000015,
-    "gpt-4-turbo-2024-04-09": 0.00003,
-    "gpt-4o-2024-05-13": 0.000015,
-    "gpt-4o": 0.000010,  # 10.00
-    "gpt-4o-mini": 0.00000060,  # 0.600
-}
-
 samples = []
 with open("./data.json", "r") as f:
     for line in f:
@@ -118,10 +96,7 @@ async def get_response(text):
 
     return chat_res
 
-parser = argparse.ArgumentParser(description="Process samples and save outputs.")
-parser.add_argument("--save_name", type=str, required=True, help="Directory to save processed outputs.")
-args = parser.parse_args()
-model = args.save_name
+
 total_cost = 0
 
 keep_ids = ["00000029", "00000004", "00000034", "00000036", "00000001"]
