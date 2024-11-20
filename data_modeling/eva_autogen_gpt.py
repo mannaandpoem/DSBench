@@ -19,7 +19,7 @@ config_list = autogen.config_list_from_json(
 
 data = []
 
-with open("./data.json", "r") as f:
+with open("../data.json", "r") as f:
     for line in f:
         data.append(eval(line))
 
@@ -101,21 +101,21 @@ total_cost = 0
 
 instruction = "You are a data scientist. I have a data modeling task. You must give me the predicted results as a CSV file as detailed in the following content. You should try your best to predict the answer. I provide you with three files. One is training data, one is test data. There is also a sample file for submission"
 
-save_path = "./output_model/"
+save_path = "../output_model/"
 
-data_path = "./data/data_resplit/{name}/"  ## replace this to your data file
+data_path = "../data/data_resplit/{name}/"  ## replace this to your data file
 
 for id in tqdm(range(0, len(data))):
     # for id in tqdm([0]):
     # print(sample)
     name = data[id]['name']
-    with open(f"./data/task/{name}.txt", "r") as f:
+    with open(f"../data/task/{name}.txt", "r") as f:
         description = f.read()
 
     data_path = data_path.format(name=name)
     text = (
         f"\n \n All three data files can be found in the folder: {data_path}. After the data modeling, please give me the prediction resutls for the test file. You must"
-        f" save the answer as a csv file. I won't run your code and you must run the code for the predicted results and give the submission file. The file should be saved in the path ./output_model/{model}/{name}.csv")
+        f" save the answer as a csv file. I won't run your code and you must run the code for the predicted results and give the submission file. The file should be saved in the path ../output_model/{model}/{name}.csv")
 
     all_context = instruction + "\n" + description + "\n" + text
     input_t = all_context
