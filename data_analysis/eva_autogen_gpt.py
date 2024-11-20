@@ -4,12 +4,9 @@ import argparse
 import os
 import autogen
 from autogen.coding import LocalCommandLineCodeExecutor
-from autogen import AssistantAgent, UserProxyAgent
-from IPython.display import Image, display
-# import fitz  # PyMuPDF
+
 import json
 import base64
-import re
 import time
 import pandas as pd
 from tqdm.notebook import tqdm
