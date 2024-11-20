@@ -19,8 +19,7 @@ args = parser.parse_args()
 model = args.save_name
 
 config_list = autogen.config_list_from_json(
-    "../../../OAI_CONFIG_LIST",
-    filter_dict={"tags": ["gpt-4o"]},  # comment out to get all
+    "../../../OAI_CONFIG_LIST"
 )
 print(config_list)
 
