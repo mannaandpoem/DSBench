@@ -1,5 +1,6 @@
 # !/usr/bin/env python
 # coding: utf-8
+import argparse
 import asyncio
 import os
 from metagpt.roles.di.data_interpreter import DataInterpreter
@@ -117,13 +118,13 @@ async def get_response(text):
 
     return chat_res
 
-
-model = "gpt-4o"
-eval_instance_num = 3
+parser = argparse.ArgumentParser(description="Process samples and save outputs.")
+parser.add_argument("--save_name", type=str, required=True, help="Directory to save processed outputs.")
+args = parser.parse_args()
+model = args.save_name
 total_cost = 0
 
-# keep_ids = ["00000029", "00000004", "00000034", "00000036", "00000001"]
-keep_ids = ["00000029", "00000004", "00000034", "00000036"]
+keep_ids = ["00000029", "00000004", "00000034", "00000036", "00000001"]
 filter_samples = []
 for sample in samples:
     if sample["id"] in keep_ids:
@@ -182,7 +183,7 @@ for id in tqdm(range(len(samples))):
                             "output": completion_tokens, "cost": cost, "time": time.time() - start,
                             "response": response})
             # break
-    save_path = os.path.join("./save_process", model + "-di")
+    save_path = os.path.join("./save_process", model)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     with open(os.path.join(save_path, sample['id'] + ".json"), "w") as f:
