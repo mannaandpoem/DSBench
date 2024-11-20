@@ -12,32 +12,18 @@ llm = LLM()
 os.environ["OPENAI_API_KEY"] = llm.config.api_key
 os.environ["OPENAI_BASE_URL"] = llm.config.base_url
 
-# 异步OpenAI客户端
-client = AsyncOpenAI()
+llm = LLM()
 
 
-async def evaluate_prediction(client, model, question, answer, prediction):
+async def evaluate_prediction(question, answer, prediction):
     prompt = (f"Please judge whether the generated answer is right or wrong. We require that the correct answer "
               f"to the prediction gives a clear answer, not just a calculation process or a disassembly of ideas. "
               f"The question is {question}. The true answer is \n {answer}. \n The predicted answer is \n {prediction}.\n "
               f"If the predicted answer is right, please output True. Otherwise output Flase. "
               f"Don't output any other text content. You only can output True or False.")
     try:
-        response = await client.chat.completions.create(
-            model=model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            temperature=0,
-            max_tokens=256,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0
-        )
-        return response.choices[0].message.content.strip()
+        response = await llm.aask(prompt)
+        return response
     except Exception as e:
         print(f"Error evaluating prediction: {e}")
         return "False"
@@ -48,7 +34,7 @@ def read_txt(path):
         return f.read()
 
 
-async def process_sample(client, sample, save_name, eval_model, save_f, save_process, save_path):
+async def process_sample(sample, save_name, save_f, save_process, save_path):
     results = []
 
     if len(sample["questions"]) > 0:
@@ -63,7 +49,7 @@ async def process_sample(client, sample, save_name, eval_model, save_f, save_pro
             question = read_txt(os.path.join("./data", sample["id"], f"{question_name}.txt"))
             pre = predicts[id]
             try:
-                ans = await evaluate_prediction(client, eval_model, question, str(sample["answers"][id]),
+                ans = await evaluate_prediction(question, str(sample["answers"][id]),
                                                 pre.get("response", []))
             except Exception as e:
                 print(f"Error processing question {id}: {e}")
@@ -109,7 +95,7 @@ async def main():
 
     # 并行处理所有样本
     tasks = [
-        process_sample(client, sample, save_name, eval_model, save_f, save_process, save_path)
+        process_sample(sample, save_name, save_f, save_process, save_path)
         for sample in samples
     ]
     all_results = await asyncio.gather(*tasks)

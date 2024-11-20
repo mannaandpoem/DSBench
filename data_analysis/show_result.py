@@ -38,8 +38,8 @@ def main(save_name):
                         continue
                     pre = eval(line.strip())
                     predicts.append(pre)
-                    costs.append(pre['cost'])
-                    time_cost.append(pre['time'])
+                    costs.append(pre.get("cost", 0))
+                    time_cost.append(pre.get("time", 0))
         id += 1
 
     results_c = []
