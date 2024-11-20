@@ -9,7 +9,8 @@ import json
 import base64
 import time
 import pandas as pd
-from tqdm.auto import tqdm
+from tqdm import tqdm
+
 
 
 parser = argparse.ArgumentParser(description="Process samples and save outputs.")
@@ -21,7 +22,7 @@ config_list = autogen.config_list_from_json(
     "../../../OAI_CONFIG_LIST",
     filter_dict={"tags": ["gpt-4o"]},  # comment out to get all
 )
-
+print(config_list)
 
 def gpt_tokenize(string: str, encoding) -> int:
     """Returns the number of tokens in a text string."""
@@ -93,7 +94,7 @@ for sample in samples:
         filter_samples.append(sample)
 samples = filter_samples
 
-
+print(f"Total samples: {len(samples)}")
 # create an AssistantAgent named "assistant"
 assistant = autogen.AssistantAgent(
     name="assistant",
@@ -148,10 +149,7 @@ def get_response(text, config_list):
     
 
 total_cost = 0
-for id in tqdm(range(36, len(samples))):
-# for id in tqdm([0]):
-    # print(sample)
-
+for id in tqdm(range(len(samples))):
     sample =samples[id]
     if len(sample["questions"]) > 0:
 
