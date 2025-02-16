@@ -36,6 +36,7 @@ def compute_metrics(data, gt_path, baseline_path, output_path, save_path):
 
         result_file = os.path.join(save_path, line['name'], "result.txt")
         if not os.path.exists(result_file):
+            print(result_file)
             scores.append(0)
             show_pre = "not exists"
         else:
@@ -81,11 +82,20 @@ def main():
     # Specify challenges to keep
     keep_names = [
         "playground-series-s4e2", "us-patent-phrase-to-phrase-matching", "bike-sharing-demand",
-        "playground-series-s3e16", "covid19-global-forecasting-week-3",
-        "feedback-prize-english-language-learning", "covid19-global-forecasting-week-2",
+        "playground-series-s3e16", 
+        #"covid19-global-forecasting-week-3",
+        "feedback-prize-english-language-learning", 
+        "covid19-global-forecasting-week-2",
         "tabular-playground-series-jan-2022", "playground-series-s3e14", "nlp-getting-started"
     ]
-    # Load data
+    """
+    keep_names = [
+        "playground-series-s4e2", 
+        "bike-sharing-demand",
+        "covid19-global-forecasting-week-2"
+        ]
+    """
+# Load data
     data = load_data(args.data_path, keep_names)
 
     # Compute metrics

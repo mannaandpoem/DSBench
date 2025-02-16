@@ -14,11 +14,9 @@ from tqdm import tqdm
 
 
 parser = argparse.ArgumentParser(description="Process samples and save outputs.")
-parser.add_argument("--save_name", type=str, required=True, help="Directory to save processed outputs.")
-parser.add_argument("--keep_ids", type=str, required=True, help="Comma-separated list of IDs to keep in samples.")
+parser.add_argument("--save_name", type=str, default="gpt-4o", help="Directory to save processed outputs.")
 args = parser.parse_args()
-model = "gpt-4o-2024-08-06"
-save_name = args.save_name
+model = args.save_name
 
 config_list = autogen.config_list_from_json(
     "../../../OAI_CONFIG_LIST"
@@ -88,17 +86,14 @@ def filter_data(data, keep_names):
     return [d for d in data if d["name"] in keep_names]
 
 
-keep_ids = args.keep_ids.split(',')
-keep_ids = [id.strip() for id in keep_ids]
-
+keep_ids = ["00000029", "00000004", "00000034", "00000036", "00000001"]
 filter_samples = []
 for sample in samples:
     if sample["id"] in keep_ids:
-    # if sample["id"] not in filter_ids:
         filter_samples.append(sample)
 samples = filter_samples
 
-print(f"Number of samples: {len(samples)}")
+print(f"Total samples: {len(samples)}")
 # create an AssistantAgent named "assistant"
 assistant = autogen.AssistantAgent(
     name="assistant",
@@ -158,14 +153,12 @@ for id in tqdm(range(len(samples))):
     if len(sample["questions"]) > 0:
 
         image = find_jpg_files(os.path.join("./data", sample["id"]))
-        print(f"image: {image}")
 
+        
         excels = find_excel_files(os.path.join("./data", sample["id"]))
-        print(f"excels: {excels}")
+
 
         introduction = read_txt(os.path.join("./data", sample["id"], "introduction.txt"))
-        print(f"introduction: {introduction}")
-
         questions = []
         for question_name in sample["questions"]:
             questions.append(read_txt(os.path.join("./data", sample["id"], question_name+".txt")))
@@ -176,10 +169,10 @@ for id in tqdm(range(len(samples))):
         if excels:
             text += "\n \n The worksheet can be obtained in the path: "
             for excel in excels:
-                text += f" {os.path.join('../data',  sample['id'], excel)}"
+                text += f" {os.path.join('./data',  sample['id'], excel)}"
     
         if image:
-            text += f"\n The image can be obtained in the path: {os.path.join('../data',  sample['id'], image[0])} \n"
+            text += f"\n The image can be obtained in the path: {os.path.join('./data',  sample['id'], image[0])} \n"
         
         question_content = ""    
         # print(workbooks)
@@ -194,24 +187,28 @@ for id in tqdm(range(len(samples))):
             start = time.time()
             cost = 0
             prompt_tokens = completion_tokens = 0
-            print(f"input text: {input_t}")
-            response = get_response(input_t, config_list)
-            print(f"response: {response}")
-            prompt_tokens = response.cost['usage_including_cached_inference'][model]['prompt_tokens']
-            completion_tokens = response.cost['usage_including_cached_inference'][model]['completion_tokens']
-            cost = response.cost['usage_including_cached_inference'][model]['cost']
-            # prompt_tokens = response.cost['usage_including_cached_inference']["gpt-4o-2024-08-06"]['prompt_tokens']
-            # completion_tokens = response.cost['usage_including_cached_inference']["gpt-4o-2024-08-06"]['completion_tokens']
-            # cost = response.cost['usage_including_cached_inference']["gpt-4o-2024-08-06"]['cost']
-            summary = response.summary
-            history = response.chat_history
+            try:
+                response = get_response(input_t, config_list)
+                #import pdb;pdb.set_trace()
+                prompt_tokens = response.cost['usage_including_cached_inference'][model]['prompt_tokens']
+                completion_tokens = response.cost['usage_including_cached_inference'][model]['completion_tokens']
+                cost = response.cost['usage_including_cached_inference'][model]['cost']
+                summary = response.summary
+                history = response.chat_history
+            except Exception as e:
+                print(e)
+                time.sleep(3)
+                
+                # cost = 0
+                history = "I cannot solve this task."
+                summary = "I cannot solve this task."
                 # all_mess.append("I cannot solve this task.")
             total_cost += cost
             print("Total cost: ", total_cost)
             answers.append({"id": sample["id"], "model": model, "input": prompt_tokens,
                             "output": completion_tokens, "cost": cost, "time": time.time()-start, 'summary': summary, "history": history })
             # break
-    save_path = os.path.join("./save_process", save_name)
+    save_path = os.path.join("./save_process", model)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     with open(os.path.join(save_path, sample['id'] + ".json"), "w") as f:

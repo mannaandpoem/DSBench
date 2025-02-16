@@ -29,13 +29,16 @@ def compute_performance(data, gt_path, pred_path, save_path, python_path):
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir)
             print(f"Compute performance for {line['name']}")
-            os.system(
-                f"python {python_path}{line['name']}_eval.py "
-                f"--answer_file {answer_file} "
-                f"--predict_file {pred_file} "
-                f"--path {save_path} "
-                f"--name {line['name']}"
-            )
+            try:
+                os.system(
+                        f"python {python_path}{line['name']}_eval.py "
+                        f"--answer_file {answer_file} "
+                        f"--predict_file {pred_file} "
+                        f"--path {save_path} "
+                        f"--name {line['name']}"
+                        )
+            except:
+                print("error: {line['name']}!")
 
 
 def main():
