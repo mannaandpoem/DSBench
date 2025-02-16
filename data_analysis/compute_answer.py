@@ -22,6 +22,7 @@ async def evaluate_prediction(question, answer, prediction):
               f"If the predicted answer is right, please output True. Otherwise output Flase. "
               f"Don't output any other text content. You only can output True or False.")
     try:
+        # import pdb; pdb.set_trace()
         response = await llm.aask(prompt)
         return response
     except Exception as e:
@@ -69,8 +70,9 @@ async def process_sample(sample, save_name, save_f, save_process, save_path):
 
 async def main():
     parser = argparse.ArgumentParser(description="Evaluate predictions with AsyncOpenAI.")
-    parser.add_argument("--save_name", type=str, required=True, help="Specify the save_name to use.")
-    parser.add_argument("--eval_model", type=str, default="gpt-4o-mini", help="Specify the model to evaluate.")
+    parser.add_argument("--save_name", "-s", type=str, required=False, help="Specify the save_name to use.", default="autogen-4o")
+    parser.add_argument("--eval_model", type=str, default="gpt-3.5-turbo-0125", help="Specify the model to evaluate.")
+    parser.add_argument("--keep_ids", type=str, required=False, help="Comma-separated list of IDs to keep in samples.", default="00000011,00000012,00000014")
     args = parser.parse_args()
 
     save_name = args.save_name
@@ -86,8 +88,21 @@ async def main():
                 continue
             samples.append(eval(line.strip()))
 
-    keep_ids = ["00000029", "00000004", "00000034", "00000036", "00000001"]
-    samples = [sample for sample in samples if sample["id"] in keep_ids]
+    # keep_ids = ["00000029", "00000004", "00000034", "00000036", "00000001"]
+    # samples = [sample for sample in samples if sample["id"] in keep_ids]
+    # filter_ids = ["00000043"]
+    # samples = [sample for sample in samples if sample["id"] not in filter_ids]
+    # 
+
+    keep_ids = args.keep_ids.split(',')
+    keep_ids = [id.strip() for id in keep_ids]
+
+    filter_samples = []
+    for sample in samples:
+        if sample["id"] in keep_ids:
+        # if sample["id"] not in filter_ids:
+            filter_samples.append(sample)
+    samples = filter_samples
 
     results = []
     save_f = open(os.path.join(save_path, save_name, "results.json"), "w")

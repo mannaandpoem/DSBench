@@ -14,9 +14,18 @@ def main(save_name):
     with open("./data.json", "r") as f:
         for line in f:
             samples.append(eval(line.strip()))
+    
+    keep_ids = args.keep_ids.split(',')
+    keep_ids = [id.strip() for id in keep_ids]
 
-    keep_ids = ["00000029", "00000004", "00000034", "00000036", "00000001"]
-    samples = [sample for sample in samples if sample["id"] in keep_ids]
+    filter_samples = []
+    for sample in samples:
+        if sample["id"] in keep_ids:
+        # if sample["id"] not in filter_ids:
+            filter_samples.append(sample)
+    samples = filter_samples
+    
+    
     save_path = "./save_process"
 
     # 加载结果数据
@@ -70,9 +79,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate save_name performance.")
     parser.add_argument(
         "--save_name",
+        "-s",
         type=str,
-        required=True,
+        default="gpt-4o-di-old-2",
         help="Specify the save_name to evaluate, e.g., 'gpt-4o' or 'gpt-4o-di'."
     )
+    parser.add_argument("--keep_ids", type=str, required=True, help="Comma-separated list of IDs to keep in samples.")
     args = parser.parse_args()
     main(args.save_name)

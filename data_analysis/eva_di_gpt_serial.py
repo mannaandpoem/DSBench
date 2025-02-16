@@ -3,6 +3,7 @@
 import argparse
 import asyncio
 import os
+from metagpt.utils.recovery_util import save_history
 from metagpt.roles.di.data_interpreter import DataInterpreter
 
 import json
@@ -12,10 +13,6 @@ import time
 import pandas as pd
 from tqdm.notebook import tqdm
 
-parser = argparse.ArgumentParser(description="Process samples and save outputs.")
-parser.add_argument("--save_name", type=str, required=True, help="Directory to save processed outputs.")
-args = parser.parse_args()
-model = args.save_name
 
 def gpt_tokenize(string: str, encoding) -> int:
     """Returns the number of tokens in a text string."""
@@ -37,8 +34,8 @@ def encode_image(image_path):
 
 def find_excel_files(directory):
     jpg_files = [file for file in os.listdir(directory) if (
-                file.lower().endswith('xlsx') or file.lower().endswith('xlsb') or file.lower().endswith(
-            'xlsm')) and not "answer" in file.lower()]
+            file.lower().endswith('xlsx') or file.lower().endswith('xlsb') or file.lower().endswith(
+        'xlsm')) and not "answer" in file.lower()]
     return jpg_files if jpg_files else None
 
 
@@ -80,6 +77,35 @@ def truncate_text(text, max_tokens=128000):
     return text
 
 
+MODEL_LIMITS = {
+    "gpt-3.5-turbo-0125": 16_385,
+    "gpt-4-turbo-2024-04-09": 128_000,
+    "gpt-4o-2024-05-13": 128_000,
+    "gpt-4o": 128_000,
+    "gpt-4o-2024-08-06": 128_000,
+    "gpt-4o-mini": 128_000,
+}
+
+# The cost per token for each model input.
+MODEL_COST_PER_INPUT = {
+    "gpt-3.5-turbo-0125": 0.0000005,
+    "gpt-4-turbo-2024-04-09": 0.00001,
+    "gpt-4o-2024-05-13": 0.000005,
+    "gpt-4o": 0.0000025,  # 2.5
+    "gpt-4o-2024-08-06": 0.0000025,  # 2.5
+    "gpt-4o-mini": 0.00000015,  # 0.150
+}
+
+# The cost per token for each model output.
+MODEL_COST_PER_OUTPUT = {
+    "gpt-3.5-turbo-0125": 0.0000015,
+    "gpt-4-turbo-2024-04-09": 0.00003,
+    "gpt-4o-2024-05-13": 0.000015,
+    "gpt-4o": 0.000010,  # 10.00
+    "gpt-4o-2024-08-06": 0.000010,
+    "gpt-4o-mini": 0.00000060,  # 0.600
+}
+
 samples = []
 with open("./data.json", "r") as f:
     for line in f:
@@ -93,18 +119,27 @@ len(samples)
 async def get_response(text):
     di = DataInterpreter()
     chat_res = await di.run(text)
-
+    save_history(di)
     return chat_res
 
-
+parser = argparse.ArgumentParser(description="Process samples and save outputs.")
+parser.add_argument("--save_name", type=str, required=True, help="Directory to save processed outputs.")
+parser.add_argument("--keep_ids", type=str, required=True, help="Comma-separated list of IDs to keep in samples.")
+args = parser.parse_args()
+model = args.save_name
 total_cost = 0
 
-keep_ids = ["00000029", "00000004", "00000034", "00000036", "00000001"]
+keep_ids = args.keep_ids.split(',')
+keep_ids = [id.strip() for id in keep_ids]
+
 filter_samples = []
 for sample in samples:
     if sample["id"] in keep_ids:
+    # if sample["id"] not in filter_ids:
         filter_samples.append(sample)
 samples = filter_samples
+
+print(f"Number of samples: {len(samples)}")
 for id in tqdm(range(len(samples))):
     sample = samples[id]
     if len(sample["questions"]) > 0:
