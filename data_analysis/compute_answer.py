@@ -50,8 +50,12 @@ async def process_sample(sample, save_name, save_f, save_process, save_path):
             question = read_txt(os.path.join("./data", sample["id"], f"{question_name}.txt"))
             pre = predicts[id]
             try:
-                ans = await evaluate_prediction(question, str(sample["answers"][id]),
-                                                pre.get("response", []))
+                # ans = await evaluate_prediction(question, str(sample["answers"][id]),
+                #                                 pre.get("response", []))
+                if not save_name.startswith('autogen'):
+                    ans = await evaluate_prediction(question, str(sample["answers"][id]), pre.get("response", []))
+                else:
+                    ans = await evaluate_prediction(question, str(sample["answers"][id]), pre.get('summary', []))
             except Exception as e:
                 print(f"Error processing question {id}: {e}")
                 ans = "False"
